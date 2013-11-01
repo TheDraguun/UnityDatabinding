@@ -11,7 +11,10 @@ public class CompositionBinder : Binder {
     }
 
     public override IObservable this[string name] {
-        get { return composedDataContext[name]; }
+        get {
+            if (composedDataContext == null) return null;
+            return composedDataContext[name];
+        }
     }
 
     public override void Invoke(string functionName) {
