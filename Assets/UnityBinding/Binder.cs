@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class Binder : MonoBehaviour, IDataContext, IInvoke {
     protected IDataContext DataContext;
-    bool isBroadcastingDataContextChange = false;
+    protected bool isBroadcastingDataContextChange = false;
 
     void Awake() {
         DataContext = FindDataContext(transform);
@@ -17,16 +17,41 @@ public class Binder : MonoBehaviour, IDataContext, IInvoke {
         get { return DataContext[name]; }
     }
 
-    public void DataContextChanged(IDataContext dataContext) {
+    public IDataContext GetChildOfDataContextBinder() {
+        var currentNode = this.gameObject.transform.parent;
+
+        while (currentNode != null) {
+            var dataContext = currentNode.GetComponent(typeof(IDataContext)) as IDataContext;
+            if (dataContext != null && dataContext is DataContextBinder) {
+                return dataContext;
+            }
+
+            currentNode = currentNode.parent;
+        }
+        return null;
+    }
+
+    public virtual void DataContextChanged(DataContextChangedMessage dataContextMsg) {
         if (isBroadcastingDataContextChange || !gameObject.activeInHierarchy) {
             return;
         }
+        var dcb = GetChildOfDataContextBinder();
+        if (dcb != null) {
+            if (dcb != dataContextMsg.parentContext) {
+                return;
+            }
+            else {
+                //Debug.LogWarning("Child of binder....." + this.gameObject.name + " -- " + dataContextMsg.parentContext);
+            }
+        }
 
-        DataContext = dataContext;
-
+        DataContext = dataContextMsg.newContext;
+        
         CreateBindings();
-        BroadcastDataContextChange(dataContext);
+        BroadcastDataContextChange(dataContextMsg.newContext);
     }
+
+
 
     protected virtual void BroadcastDataContextChange(IDataContext dc) {
         if (isBroadcastingDataContextChange) {
@@ -34,7 +59,7 @@ public class Binder : MonoBehaviour, IDataContext, IInvoke {
         }
 
         isBroadcastingDataContextChange = true;
-        BroadcastMessage("DataContextChanged", dc, SendMessageOptions.DontRequireReceiver);
+        BroadcastMessage("DataContextChanged", new DataContextChangedMessage() {newContext = dc, parentContext = this}, SendMessageOptions.DontRequireReceiver);
         isBroadcastingDataContextChange = false;
     }
 
@@ -56,10 +81,14 @@ public class Binder : MonoBehaviour, IDataContext, IInvoke {
     }
 
     public virtual void Invoke(string functionName) {
-        InvokeCore(DataContext, functionName);
+        InvokeCore(DataContext, functionName, null);
     }
 
-    protected void InvokeCore(IDataContext dc, string functionName) {
+    public virtual void Invoke(string functionName, object[] parameters) {
+        InvokeCore(DataContext, functionName, parameters);
+    }
+
+    protected void InvokeCore(IDataContext dc, string functionName, object[] parameters = null) {
         var invoker = dc as IInvoke;
         if(invoker != null) {
             invoker.Invoke(functionName);
@@ -74,11 +103,11 @@ public class Binder : MonoBehaviour, IDataContext, IInvoke {
             var method = dcType.GetMethod(functionName);
 
             if(method != null) {
-                method.Invoke(dc, null);
+                    method.Invoke(dc, parameters);
             }else {
                 var parentDC = FindDataContext(transform.parent);
                 if(parentDC != null) {
-                    InvokeCore(parentDC, functionName);
+                    InvokeCore(parentDC, functionName, parameters);
                 }
             }
         }
@@ -105,5 +134,10 @@ public class Binder : MonoBehaviour, IDataContext, IInvoke {
         };
 
         return (Observable<T>)ob;
+    }
+
+    public class DataContextChangedMessage {
+        public IDataContext newContext;
+        public IDataContext parentContext;
     }
 }

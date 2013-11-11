@@ -1,4 +1,6 @@
-﻿public class DataContextBinder : Binder {
+﻿using UnityEngine;
+
+public class DataContextBinder : Binder {
     public string property;
     IDataContext childDataContext;
 
@@ -20,4 +22,22 @@
         childDataContext = value;
         BroadcastDataContextChange(childDataContext);
     }
+
+    public override void DataContextChanged(DataContextChangedMessage dataContextMsg) {
+        if (isBroadcastingDataContextChange || !gameObject.activeInHierarchy) {
+            return;
+        }
+        var dcb = GetChildOfDataContextBinder();
+        if (dcb != null) {
+            if (dcb != dataContextMsg.parentContext) {
+                return;
+            } else {
+                //Debug.LogWarning("Child of binder....." + this.gameObject.name + " -- " + dataContextMsg.parentContext);
+            }
+        }
+        DataContext = dataContextMsg.newContext;
+        CreateBindings();
+        BroadcastDataContextChange(childDataContext);
+    }
+
 }

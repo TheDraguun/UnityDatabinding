@@ -1,3 +1,4 @@
+using Assets.Scripts;
 using UnityEngine;
 
 public class MainMenu : ViewModel {
@@ -27,6 +28,9 @@ public class MainMenu : ViewModel {
         eventAggregator.Publish(new Navigate<SettingsMenu>());
     }
 
+    public void CharacterConfig() {
+        eventAggregator.Publish(new Navigate<PlayerMenu>());
+    }
     public void Quit() {
         Application.Quit();
     }
