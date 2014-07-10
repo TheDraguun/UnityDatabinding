@@ -1,4 +1,8 @@
+
+
 # Unity Databinding
+
+> **Note:** _Do not use this library!_ It is not maintained, is not complete and has not been tested. This github repo is being left available _only_ for historic reasons and **will be removed** in the future.
 
 This is a basic databinding framework for Unity3D. The general mechanism can be extended to work with any GUI framework and can even be used to databind aspects of the scene hierarchy itself. This package contains compositional and IoC related binders as well as some example binders for the NGUI library.
 
@@ -21,6 +25,3 @@ A sample scene is included in this repo. It demonstrates usage of composed ViewM
 3. Dynamically construct game objects.
 4. Download asset bundles automatically and extract custom views.
 5. Switch to different views based on screen size, orientation or skin.
-
-## Note 
-This system has not yet been tested on mobile devices. It has not been used in a production game. It is the product of an afternoon or two of playing around with NGUI by a novice Unity3D developer (albeit an experience front-end developer). This code is primarily provided as an example of how a databinding system might be built with the intention of getting feedback from the community on whether this is valuable enough to pursue more fully and bring to full production-ready quality.
